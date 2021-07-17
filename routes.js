@@ -11,6 +11,10 @@ router.route("/test").post(testCtrl.postTest);
 
 // USER
 router.route("/user").get(userCtrl.getUser);
-router.route("/user").post(userCtrl.postUser);
+router.route("/signup").post(userCtrl.createUser);
+router.route("/login").post(userCtrl.loginUser);
+router.route("/update-password").post(userCtrl.updatePassword);
+
+// LOGIN
 
 module.exports = router;
