@@ -1,9 +1,11 @@
 const mongoose = require("mongoose");
+require("dotenv").config();
 let User = require("../models/usermodel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const verify = require("./verifyToken");
 
-const JWT_SECRET = "AOVIJOVJ$@)*(U@)*$WEJIOWJV@)$*@J)$R"; // move this to .env after completion
+const JWT_SECRET = process.env.JWT_SECRET_KEY; // move this to .env after completion
 
 module.exports = {
   // responds with a list of all users in DB
@@ -69,24 +71,25 @@ module.exports = {
   // ============================= UPDATE PASSWORD =============================
 
   updatePassword: async function (req, res) {
-    const { token, newpassword: plainTextPassword } = req.body;
-    if (plainTextPassword.length < 8)
-      return res.status(400).send("Password Too Short");
+    //validate using the verify function to check the header
+    if (verify) {
+      const { username, newpassword: plainTextPassword } = req.body;
+      if (plainTextPassword.length < 8)
+        return res.status(400).send("Password Too Short");
+      const _id = user.id;
 
-    const user = jwt.verify(token, JWT_SECRET);
-    const _id = user.id;
-    const password = await bcrypt.hash(plainTextPassword, 15);
-    await User.updateOne(
-      { _id },
-      {
-        $set: { password },
-      }
-    )
-      .then(() =>
-        res
-          .status(201)
-          .send("User " + { username } + " password updated successfully!")
+      //take the new plaintext password and hash it before updating it for the user
+      const password = await bcrypt.hash(plainTextPassword, 15);
+      await User.updateOne(
+        { _id },
+        {
+          $set: { password },
+        }
       )
-      .catch((err) => res.status(400).send("Error: " + err));
+        .then(() => res.status(201).send("User password updated successfully!"))
+        .catch((err) => res.status(400).send("Error: " + err));
+    } else {
+      return res.status(401).sned("Access Denied: Token missing or invalid");
+    }
   },
 };
