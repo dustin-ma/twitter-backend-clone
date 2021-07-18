@@ -11,7 +11,7 @@ router.route("/test").get(testCtrl.getTest);
 router.route("/test").post(testCtrl.postTest);
 
 // USER
-router.route("/user").get(userCtrl.getUser);
+router.route("/users").get(userCtrl.getUser);
 router.route("/signup").post(userCtrl.createUser);
 router.route("/login").post(userCtrl.loginUser);
 router.route("/update-password").post(userCtrl.updatePassword);

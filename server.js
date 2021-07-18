@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const routes = require("./routes");
+const db = require("./connect");
 
 require("dotenv").config();
 
@@ -13,17 +14,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use("/api", routes);
 
-const uri = process.env.ATLAS_URI;
-mongoose.connect(uri, {
-  useNewUrlParser: true,
-  useCreateIndex: true,
-  useUnifiedTopology: true,
-});
-const connection = mongoose.connection;
-connection.once("open", () => {
-  console.log("MongoDB database connection established successfully!");
-});
-
-app.listen(port, () => {
-  console.log(`App is running on port: ${port}`);
+db.connect().then(() => {
+  app.listen(port, () => {
+    console.log(`App is running on port: ${port}`);
+  });
 });

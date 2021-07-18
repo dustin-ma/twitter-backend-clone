@@ -25,7 +25,7 @@ module.exports = {
 
       newTweet
         .save()
-        .then(() => res.status(201).send("Tweet created successfully!"))
+        .then(() => res.status(201).json(newTweet))
         .catch((err) => res.status(400).send("Error: " + err));
     } else {
       return res.status(401).send("Access Denied");
