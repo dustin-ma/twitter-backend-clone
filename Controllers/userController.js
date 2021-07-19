@@ -26,17 +26,20 @@ module.exports = {
     if (plainTextPassword.length < 8)
       return res.status(400).send("Password Too Short");
 
-    const password = await bcrypt.hash(plainTextPassword, 15);
+    const password = bcrypt.hash(plainTextPassword, 15);
 
     const newUser = new User({
       username,
       password, // we do not store the plaintext password here
     });
 
-    newUser
-      .save()
-      .then(() => res.status(201).send("User created successfully!"))
-      .catch((err) => res.status(400).send("Error: " + err));
+    try {
+      const savedUser = await newUser
+        .save()
+        .then(() => res.status(201).json(savedUser));
+    } catch (err) {
+      res.status(400).send("Error " + err);
+    }
   },
 
   // ============================= LOGIN =============================
@@ -89,7 +92,7 @@ module.exports = {
         .then(() => res.status(201).send("User password updated successfully!"))
         .catch((err) => res.status(400).send("Error: " + err));
     } else {
-      return res.status(401).sned("Access Denied: Token missing or invalid");
+      return res.status(401).send("Access Denied: Token missing or invalid");
     }
   },
 };

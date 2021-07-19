@@ -3,7 +3,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const routes = require("./routes");
 const db = require("./connect");
-
+process.env.NODE_END = "test";
 require("dotenv").config();
 
 const app = express();

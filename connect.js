@@ -4,6 +4,7 @@ const uri = process.env.ATLAS_URI;
 
 function connect() {
   return new Promise((resolve, reject) => {
+    // Check if this is for a test, if so, use the mock database
     if (process.env.NODE_ENV === "test") {
       const Mockgoose = require("mockgoose").Mockgoose;
       const mockgoose = new Mockgoose(mongoose);

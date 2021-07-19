@@ -1,4 +1,4 @@
-// process.env.NODE_END = "test";
+process.env.NODE_END = "test";
 var host = "http://localhost:5000";
 const token = process.env.TEST_TOKEN;
 
@@ -8,7 +8,7 @@ const request = require("supertest");
 const router = require("../../../routes.js");
 const conn = require("../../../connect.js");
 
-describe("GET /tweets", () => {
+describe("GET/POST /tweets", () => {
   before((done) => {
     conn
       .connect()
@@ -23,34 +23,18 @@ describe("GET /tweets", () => {
       .catch((err) => done(err));
   });
 
-  it("OK, getting tweets works", (done) => {
+  it("TEST: Getting all tweets from DB", (done) => {
     request(host)
       .get("/api/tweets")
       .then((res) => {
         const body = res.body;
-        expect(body.length).to.be.a("number").that.is.not.equal(0);
+        expect(res.statusCode).to.equal(201);
         done();
       })
       .catch((err) => done(err));
   });
-});
 
-describe("POST /tweet", () => {
-  before((done) => {
-    conn
-      .connect()
-      .then(() => done())
-      .catch((err) => done(err));
-  });
-
-  after((done) => {
-    conn
-      .close()
-      .then(() => done())
-      .catch((err) => done(err));
-  });
-
-  it("OK, making a new tweet works", (done) => {
+  it("TEST: Posting a new tweet to DB", (done) => {
     request(host)
       .post("/api/tweet")
       .send({
@@ -63,6 +47,20 @@ describe("POST /tweet", () => {
         expect(body).to.contain.property("_id");
         expect(body).to.contain.property("username");
         expect(body).to.contain.property("text");
+        done();
+      });
+  });
+
+  it("TEST: Invalid tweet with empty text field", (done) => {
+    request(host)
+      .post("/api/tweet")
+      .send({
+        username: "TESTUSER",
+        text: "",
+      })
+      .set({ Authorization: `Bearer ${token}` })
+      .then((res) => {
+        expect(res.statusCode).to.equal(400);
         done();
       });
   });

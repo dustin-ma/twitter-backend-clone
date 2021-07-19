@@ -1,4 +1,4 @@
-//process.env.NODE_END = "test";
+process.env.NODE_END = "test";
 
 var host = "http://localhost:5000";
 const token = process.env.TEST_TOKEN;
@@ -23,48 +23,29 @@ describe("GET /users", () => {
       .catch((err) => done(err));
   });
 
-  it("OK, getting users works", (done) => {
+  it("TEST: Retriving all Users from DB", (done) => {
     request(host)
       .get("/api/users")
       .then((res) => {
         const body = res.body;
-        expect(body.length).to.be.a("number").that.is.not.equal(0);
+        expect(res.statusCode).to.equal(201);
         done();
       })
       .catch((err) => done(err));
   });
-});
 
-/*
-describe("POST /tweet", () => {
-  before((done) => {
-    conn
-      .connect()
-      .then(() => done())
-      .catch((err) => done(err));
-  });
-
-  after((done) => {
-    conn
-      .close()
-      .then(() => done())
-      .catch((err) => done(err));
-  });
-
-  it("OK, making a new tweet works", (done) => {
-    request(app)
-      .post("/tweet")
+  it("TEST: Making a new user", (done) => {
+    request(host)
+      .post("/api/register")
       .send({
-        username: "TESTUSER",
-        text: "TESTING TESTING",
+        username: "TESTUSER123",
+        password: "23452345",
       })
       .then((res) => {
         const body = res.body;
-        expect(body).to.contain.property("_id");
-        expect(body).to.contain.property("username");
-        expect(body).to.contain.property("text");
-        done();
-      });
+        console.log(body);
+        expect(res.statusCode).to.equal(400);
+      })
+      .catch((err) => done(err));
   });
 });
-*/
