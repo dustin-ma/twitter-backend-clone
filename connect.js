@@ -15,6 +15,7 @@ function connect() {
             useNewUrlParser: true,
             useCreateIndex: true,
             useUnifiedTopology: true,
+            useFindAndModify: false,
           })
           .then((res, err) => {
             if (err) return reject(err);
@@ -28,6 +29,7 @@ function connect() {
           useNewUrlParser: true,
           useCreateIndex: true,
           useUnifiedTopology: true,
+          useFindAndModify: false,
         })
         .then((res, err) => {
           if (err) return reject(err);

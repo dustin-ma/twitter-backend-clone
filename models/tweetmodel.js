@@ -12,10 +12,11 @@ const tweetSchema = new Schema(
       type: String,
       required: true,
     },
+    //array holds usernames that liked this tweet
     likes: {
-      type: Number,
+      type: Array,
       required: false,
-      default: 0,
+      default: [],
     },
     comments: {
       type: Array,

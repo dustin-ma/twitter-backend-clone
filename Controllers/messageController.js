@@ -1,44 +1,56 @@
 const mongoose = require("mongoose");
 let Message = require("../models/messagemodel");
 let Conversation = require("../models/conversationmodel");
+let User = require("../models/usermodel");
 const verify = require("./verifyToken");
 
 module.exports = {
   // Create a new conversation //
   createConvo: async function (req, res) {
-    const { senderId, receiverId } = req.body;
+    const { senderId: sender_username, receiverId: receiver_username } =
+      req.body;
 
-    if (!senderId || !receiverId)
+    const sender = await User.findOne({
+      username: sender_username,
+    });
+    const receiver = await User.findOne({
+      username: receiver_username,
+    });
+
+    if (!sender_username || !receiver_username)
       return res.status(400).send("Sender and Receiver IDs are required");
 
     const newConvo = new Conversation({
-      members: [senderId, receiverId],
+      members: [sender._id, receiver._id],
     });
 
-    try {
-      const savedConvo = await newConvo.save();
-      return res.status(200).json(savedConvo);
-    } catch (err) {
-      res.status(400).send("Error " + err);
-    }
+    newConvo
+      .save()
+      .then(() => res.status(201).json(newConvo))
+      .catch((err) => res.status(400).send(err));
   },
 
   sendMessage: async function (req, res) {
-    const { conversationId, senderId, text } = req.body;
-    if (!conversationId || !senderId || !text)
+    const { conversationId, senderId: sender_username, text } = req.body;
+    if (!conversationId || !sender_username || !text)
       return res.status(400).send("Invalid Request");
-    const newMessage = new Message({
+
+    // find the User via username
+    const sender = await User.findOne({
+      username: sender_username,
+    });
+    if (!sender) return res.status(400).send("Invalid Sender");
+    const senderId = sender._id;
+    const newMessage = await new Message({
       conversationId,
       senderId,
       text,
     });
-    // if (verify)
-    try {
-      const savedMessage = await newMessage.save();
-      res.status(200).json(savedMessage);
-    } catch (err) {
-      res.status(400).send("Error " + err);
-    }
+
+    newMessage
+      .save()
+      .then(() => res.status(201).json(newMessage))
+      .catch((err) => res.status(400).send(err));
   },
 
   getConvo: async function (req, res) {

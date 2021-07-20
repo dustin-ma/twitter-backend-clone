@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 let Tweet = require("../models/tweetmodel");
+let User = require("../models/usermodel");
 const verify = require("./verifyToken");
 
 module.exports = {
@@ -52,17 +53,23 @@ module.exports = {
       return res.status(401).send("Access Denied");
     }*/
   },
+
   // LIKE TWEET
 
   likeTweet: async (req, res) => {
+    const { username } = req.body;
+    const findUser = await User.findOne({
+      username,
+    });
+    if (!findUser) return res.status(400).send("You cannot like this tweet");
     if (verify) {
       // once verified the token, we extract the tweet object by its _id
-      const tweet_id = req.params.id;
+      const tweet_id = req.params.tweetId;
       const tweet = await Tweet.findOne({
         _id: tweet_id,
       });
-
-      tweet.likes += 1;
+      if (!tweet) return res.status(400).send("Tweet does not exist");
+      tweet.likes = [...tweet.likes, username];
       await Tweet.findOneAndUpdate({ _id: tweet_id }, tweet, { new: true });
       return res.status(201).send("Tweet Liked");
     } else {
@@ -70,7 +77,35 @@ module.exports = {
     }
   },
 
-  // COMMENT TWEET
+  // UNLIKE TWEET / TODO: merge this with like tweet to make it toggle => if liked then unlike, if not liked then add to liked array
+
+  unlikeTweet: async (req, res) => {
+    const { username } = req.body;
+    const findUser = await User.findOne({
+      username,
+    });
+    if (!findUser) return res.status(400).send("You cannot unlike this tweet");
+    if (verify) {
+      // once verified the token, we extract the tweet object by its _id
+      const tweet_id = req.params.tweetId;
+      const tweet = await Tweet.findOne({
+        _id: tweet_id,
+      });
+      if (!tweet) return res.status(400).send("Tweet does not exist");
+
+      tweet.likes = tweet.likes.filter((e) => e !== username);
+      await Tweet.findOneAndUpdate({ _id: tweet_id }, tweet, { new: true });
+      return res.status(201).send("Tweet Unliked");
+    } else {
+      return res.status(401).send("Access Denied");
+    }
+  },
+  /*
+     COMMENT TWEET
+      - Tweet comments are treated as a new tweet that can also be commented / liked
+      and each tweet will have an array of tweets as its comments. I think this is the
+      optimal solution since it allows for double-binding
+  */
 
   commentTweet: async (req, res) => {
     // if (verify) {
@@ -106,11 +141,12 @@ module.exports = {
     } */
   },
 
-  // RETWEET
   /*
-      If the retweet api is called and it contains new text, then a new tweet
-      shall be generated and the original tweet_id would be stored in the body
-      of the new tweet under reference.
+      RETWEET
+        - A retweet is treated as a new tweet that refers to its original tweet
+        The original tweetId is stored in the new tweets <reference> field, this way
+        the user may trace any retweet back to its parents while the parent does not 
+        have to be notified about retweets of itself.
   */
   reTweet: async (req, res) => {
     // if (verify)

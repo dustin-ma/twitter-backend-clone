@@ -26,6 +26,8 @@ router.route("/delete-tweet/:tweetId").get(tweetCtrl.deleteTweet);
 //===================================================//
 router.route("/tweet").post(tweetCtrl.createTweet);
 router.route("/retweet/:tweetId").post(tweetCtrl.reTweet);
+router.route("/like-tweet/:tweetId").post(tweetCtrl.likeTweet);
+router.route("/unlike-tweet/:tweetId").post(tweetCtrl.unlikeTweet);
 router.route("/update-tweet/:tweetId").post(tweetCtrl.updateTweet);
 router.route("/comment-tweet/:tweetId").post(tweetCtrl.commentTweet);
 
