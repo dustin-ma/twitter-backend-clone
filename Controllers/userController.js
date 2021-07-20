@@ -18,21 +18,26 @@ module.exports = {
   // ============================= REGISTER =============================
 
   createUser: async function (req, res) {
-    const { username, password: plainTextPassword } = req.body;
+    const { username, password } = req.body;
 
     // validate data
     if (!username || typeof username !== "string" || username.length < 3)
       return res.status(400).send("Invalid Username");
-    if (plainTextPassword.length < 8)
-      return res.status(400).send("Password Too Short");
+    if (password.length < 8) return res.status(400).send("Password Too Short");
 
-    const password = bcrypt.hash(plainTextPassword, 15);
+    const password_hashed = await bcrypt.hash(password, 15);
 
     const newUser = new User({
       username,
-      password, // we do not store the plaintext password here
+      password: password_hashed, // we do not store the plaintext password here
     });
 
+    newUser
+      .save()
+      .then(() => res.status(201).json(newUser))
+      .catch((err) => res.status(400).send(err));
+
+    /* THIS DOESNT WORK AND I DON'T KNOW WHY
     try {
       const savedUser = await newUser
         .save()
@@ -40,6 +45,7 @@ module.exports = {
     } catch (err) {
       res.status(400).send("Error " + err);
     }
+    */
   },
 
   // ============================= LOGIN =============================
@@ -48,7 +54,7 @@ module.exports = {
     const { username, password } = req.body;
     const user = await User.findOne({ username })
       .lean()
-      .catch((err) => res.status(400).send("Error: " + err));
+      .catch((err) => res.status(400).send(err));
 
     /*
     if (!user) {
@@ -65,7 +71,7 @@ module.exports = {
         },
         JWT_SECRET
       );
-      return res.json({ status: "ok", data: token });
+      return res.status(201).json({ status: "ok", data: token });
     }
 
     return res.status(400).send("Invalid password");
@@ -90,7 +96,7 @@ module.exports = {
         }
       )
         .then(() => res.status(201).send("User password updated successfully!"))
-        .catch((err) => res.status(400).send("Error: " + err));
+        .catch((err) => res.status(400).send(err));
     } else {
       return res.status(401).send("Access Denied: Token missing or invalid");
     }

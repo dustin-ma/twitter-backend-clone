@@ -22,6 +22,11 @@ const tweetSchema = new Schema(
       required: false,
       default: [],
     },
+    //if the tweet is a re-tweet
+    reference: {
+      type: String,
+      required: false,
+    },
   },
   {
     timestamps: true,
