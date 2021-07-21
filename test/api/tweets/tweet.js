@@ -1,6 +1,6 @@
-process.env.NODE_END = "test";
+process.env.NODE_ENV = "test";
+
 var host = "http://localhost:5000";
-const token = process.env.TEST_TOKEN;
 
 const expect = require("chai").expect;
 const request = require("supertest");
@@ -10,10 +10,12 @@ const conn = require("../../../connect.js");
 
 describe("GET/POST /tweets", () => {
   let test_tweet_id = "";
+  let userId = "";
+  let token = "";
 
   before((done) => {
     conn
-      .connect()
+      .mockConnect()
       .then(() => done())
       .catch((err) => done(err));
   });
@@ -25,11 +27,43 @@ describe("GET/POST /tweets", () => {
       .catch((err) => done(err));
   });
 
+  it("TEST: Making a new test user", (done) => {
+    request(host)
+      .post("/api/register")
+      .send({
+        username: "TESTING",
+        password: "123456789",
+      })
+      .then((res) => {
+        const body = res.body;
+        userId = body._id;
+        expect(res.statusCode).to.equal(201);
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  it("TEST: Login as the test user", (done) => {
+    request(host)
+      .post("/api/login")
+      .send({
+        username: "TESTING",
+        password: "123456789",
+      })
+      .then((res) => {
+        const body = res.body;
+        token = body.data;
+        expect(res.statusCode).to.equal(201);
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
   it("TEST: Posting a new tweet to DB", (done) => {
     request(host)
       .post("/api/tweet")
       .send({
-        username: "TESTING_USERNAME",
+        username: "TESTING",
         text: "TESTING TWEET CONTENT",
       })
       .set({ Authorization: `Bearer ${token}` })
@@ -43,11 +77,37 @@ describe("GET/POST /tweets", () => {
       });
   });
 
+  it("TEST: Liking a tweet that exists", (done) => {
+    request(host)
+      .post(`/api/like-tweet/${test_tweet_id}`)
+      .send({
+        username: "TESTING",
+      })
+      .set({ Authorization: `Bearer ${token}` })
+      .then((res) => {
+        expect(res.statusCode).to.equal(201);
+        done();
+      });
+  });
+
+  it("TEST: Unliking a tweet that was previously liked", (done) => {
+    request(host)
+      .post(`/api/like-tweet/${test_tweet_id}`)
+      .send({
+        username: "TESTING",
+      })
+      .set({ Authorization: `Bearer ${token}` })
+      .then((res) => {
+        expect(res.statusCode).to.equal(201);
+        done();
+      });
+  });
+
   it("TEST: Invalid tweet with empty text field", (done) => {
     request(host)
       .post("/api/tweet")
       .send({
-        username: "TESTING_USERNAME",
+        username: "TESTING",
         text: "",
       })
       .set({ Authorization: `Bearer ${token}` })
@@ -63,7 +123,7 @@ describe("GET/POST /tweets", () => {
       .then((res) => {
         const body = res.body;
         expect(res.statusCode).to.equal(201);
-        expect(body.length).to.equal(1);
+        expect(body.length).to.be.a("number");
         done();
       })
       .catch((err) => done(err));
@@ -73,7 +133,7 @@ describe("GET/POST /tweets", () => {
     request(host)
       .post(`/api/update-tweet/${test_tweet_id}`)
       .send({
-        username: "TESTING_USERNAME",
+        username: "TESTING",
         text: "updated text",
       })
       .then((res) => {
@@ -88,7 +148,7 @@ describe("GET/POST /tweets", () => {
     request(host)
       .post(`/api/update-tweet/${test_tweet_id}`)
       .send({
-        username: "TESTING_USERNAME",
+        username: "TESTING",
         text: "",
       })
       .then((res) => {
@@ -103,7 +163,7 @@ describe("GET/POST /tweets", () => {
     request(host)
       .post(`/api/update-tweet/non-existing-id`)
       .send({
-        username: "TESTING_USERNAME",
+        username: "TESTING",
         text: "updated text",
       })
       .then((res) => {
@@ -118,7 +178,7 @@ describe("GET/POST /tweets", () => {
     request(host)
       .post(`/api/retweet/${test_tweet_id}`)
       .send({
-        username: "TESTING_USERNAME",
+        username: "TESTING",
         text: "This is a retweet",
         reference: test_tweet_id,
       })
@@ -135,7 +195,7 @@ describe("GET/POST /tweets", () => {
     request(host)
       .post(`/api/retweet/60f651ee8742d1111111111e`)
       .send({
-        username: "TESTING_USERNAME",
+        username: "TESTING",
         text: "This is a retweet",
         reference: "60f651ee8742d1111111111e",
       })
@@ -151,7 +211,7 @@ describe("GET/POST /tweets", () => {
     request(host)
       .post(`/api/comment-tweet/${test_tweet_id}`)
       .send({
-        username: "TESTING_USERNAME",
+        username: "TESTING",
         comment: "This is a comment",
       })
       .then((res) => {
@@ -167,7 +227,7 @@ describe("GET/POST /tweets", () => {
     request(host)
       .post(`/api/comment-tweet/${test_tweet_id}`)
       .send({
-        username: "TESTING_USERNAME",
+        username: "TESTING",
       })
       .then((res) => {
         expect(res.statusCode).to.equal(400);
@@ -180,7 +240,7 @@ describe("GET/POST /tweets", () => {
     request(host)
       .post(`/api/comment-tweet/60f651ee8742d1111111111e`)
       .send({
-        username: "TESTING_USERNAME",
+        username: "TESTING",
         comment: "This is a comment",
       })
       .then((res) => {
@@ -203,6 +263,16 @@ describe("GET/POST /tweets", () => {
   it("TEST: Deleting a tweet with an invalid tweet id ", (done) => {
     request(host)
       .get(`/api/delete-tweet/60f651ee8742d1111111111e`)
+      .then((res) => {
+        expect(res.statusCode).to.equal(201);
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  it("TEST: Deleting the test user [TESTING]", (done) => {
+    request(host)
+      .get(`/api/delete-user/${userId}`)
       .then((res) => {
         expect(res.statusCode).to.equal(201);
         done();

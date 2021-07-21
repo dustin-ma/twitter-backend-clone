@@ -4,6 +4,8 @@ const userCtrl = require("./Controllers/userController");
 const tweetCtrl = require("./Controllers/tweetController");
 const messageCtrl = require("./Controllers/messageController");
 
+const verify = require("./Controllers/verifyToken");
+
 // Initialize express-router
 const router = express.Router();
 
@@ -15,6 +17,7 @@ router.route("/test").post(testCtrl.postTest);
 // USER
 
 router.route("/users").get(userCtrl.getUser);
+router.route("/delete-user/:userId").get(userCtrl.deleteUser);
 //===================================================//
 router.route("/register").post(userCtrl.createUser);
 router.route("/login").post(userCtrl.loginUser);

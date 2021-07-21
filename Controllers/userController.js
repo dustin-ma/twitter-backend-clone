@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 require("dotenv").config();
 let User = require("../models/usermodel");
+let Tweet = require("../models/tweetmodel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const verify = require("./verifyToken");
@@ -37,7 +38,7 @@ module.exports = {
       .then(() => res.status(201).json(newUser))
       .catch((err) => res.status(400).send(err));
 
-    /* THIS DOESNT WORK AND I DON'T KNOW WHY
+    /* THIS FORMAT DOESNT WORK AND I DON'T KNOW WHY
     try {
       const savedUser = await newUser
         .save()
@@ -96,6 +97,21 @@ module.exports = {
         }
       )
         .then(() => res.status(201).send("User password updated successfully!"))
+        .catch((err) => res.status(400).send(err));
+    } else {
+      return res.status(401).send("Access Denied: Token missing or invalid");
+    }
+  },
+
+  deleteUser: async (req, res) => {
+    // check for JWT ownership by <if (verify)>
+    // once verified then we can find the user via id and delete
+    if (verify) {
+      const user_id = req.params.userId;
+      const removeUser = await User.findOneAndRemove({
+        _id: user_id,
+      })
+        .then(() => res.status(201).send("User Removed"))
         .catch((err) => res.status(400).send(err));
     } else {
       return res.status(401).send("Access Denied: Token missing or invalid");

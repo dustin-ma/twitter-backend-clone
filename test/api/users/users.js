@@ -1,4 +1,4 @@
-process.env.NODE_END = "test";
+process.env.NODE_ENV = "test";
 
 var host = "http://localhost:5000";
 // const token = process.env.TEST_TOKEN;
@@ -8,13 +8,16 @@ const request = require("supertest");
 const router = require("../../../routes.js");
 const conn = require("../../../connect.js");
 
+let userId = "";
+let userIdA = "";
+let userIdB = "";
 let conversationId = "";
 let token = "";
 
 describe("TESTING USER OPERATIONS", () => {
   before((done) => {
     conn
-      .connect()
+      .mockConnect()
       .then(() => done())
       .catch((err) => done(err));
   });
@@ -34,6 +37,8 @@ describe("TESTING USER OPERATIONS", () => {
         password: "123456789",
       })
       .then((res) => {
+        const body = res.body;
+        userId = body._id;
         expect(res.statusCode).to.equal(201);
         done();
       })
@@ -91,7 +96,7 @@ describe("TESTING USER OPERATIONS", () => {
       .then((res) => {
         // const body = res.body;
         expect(res.statusCode).to.equal(201);
-        expect(res.body.length).to.equal(1);
+        expect(res.body.length).to.be.a("number");
         done();
       })
       .catch((err) => done(err));
@@ -108,7 +113,7 @@ describe("TESTING USER OPERATIONS", () => {
         const body = res.body;
         expect(res.statusCode).to.equal(201);
         expect(body).to.contain.property("data"); // this contains the JWT token
-        // token = res.body.data;
+        token = res.body.data;
         done();
       })
       .catch((err) => done(err));
@@ -120,7 +125,7 @@ describe("TESTING USER OPERATIONS", () => {
 describe("TESTING MESSAGING OPERATIONS", () => {
   before((done) => {
     conn
-      .connect()
+      .mockConnect()
       .then(() => done())
       .catch((err) => done(err));
   });
@@ -140,6 +145,7 @@ describe("TESTING MESSAGING OPERATIONS", () => {
         password: "123456789",
       })
       .then((res) => {
+        userIdA = res.body._id;
         expect(res.statusCode).to.equal(201);
         done();
       })
@@ -155,6 +161,7 @@ describe("TESTING MESSAGING OPERATIONS", () => {
       })
       .then((res) => {
         // const body = res.body;
+        userIdB = res.body._id;
         expect(res.statusCode).to.equal(201);
         done();
       })
@@ -204,6 +211,26 @@ describe("TESTING MESSAGING OPERATIONS", () => {
       })
       .then((res) => {
         // const body = res.body;
+        expect(res.statusCode).to.equal(201);
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  it("TEST: Deleting the test user [TESTING_USERNAME_A]", (done) => {
+    request(host)
+      .get(`/api/delete-user/${userIdA}`)
+      .then((res) => {
+        expect(res.statusCode).to.equal(201);
+        done();
+      })
+      .catch((err) => done(err));
+  });
+
+  it("TEST: Deleting the test user [TESTING_USERNAME_B]", (done) => {
+    request(host)
+      .get(`/api/delete-user/${userIdB}`)
+      .then((res) => {
         expect(res.statusCode).to.equal(201);
         done();
       })

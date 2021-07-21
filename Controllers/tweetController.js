@@ -15,7 +15,6 @@ module.exports = {
   // SEND TWEET
 
   createTweet: async (req, res) => {
-    //if (verify) {
     const { username, text } = req.body;
     if (!text) return res.status(400).send("Tweet cannot be empty!");
 
@@ -28,30 +27,27 @@ module.exports = {
       .save()
       .then(() => res.status(201).json(newTweet))
       .catch((err) => res.status(400).send(err));
-    /*} else {
-      return res.status(401).send("Access Denied");
-    }*/
   },
 
   // UPDATE TWEET
 
   updateTweet: async (req, res) => {
-    // if (verify)
-    const { username, text } = req.body;
-    const tweet_id = req.params.tweetId;
-    if (!text) return res.status(400).send("New tweet cannot be empty!");
+    if (verify) {
+      const { username, text } = req.body;
+      const tweet_id = req.params.tweetId;
+      if (!text) return res.status(400).send("New tweet cannot be empty!");
 
-    await Tweet.updateOne(
-      { _id: tweet_id },
-      {
-        $set: { text },
-      }
-    )
-      .then(() => res.status(201).send("Tweet updated successfully!"))
-      .catch((err) => res.status(400).send(err));
-    /*} else {
-      return res.status(401).send("Access Denied");
-    }*/
+      await Tweet.updateOne(
+        { _id: tweet_id },
+        {
+          $set: { text },
+        }
+      )
+        .then(() => res.status(201).send("Tweet updated successfully!"))
+        .catch((err) => res.status(400).send(err));
+    } else {
+      return res.status(401).send("Access Denied: Token missing or invalid");
+    }
   },
 
   // LIKE TWEET
@@ -69,7 +65,19 @@ module.exports = {
         _id: tweet_id,
       });
       if (!tweet) return res.status(400).send("Tweet does not exist");
-      tweet.likes = [...tweet.likes, username];
+
+      // check if this user has previously liked the tweet
+      if (!tweet.likes.includes(username)) {
+        tweet.likes = [...tweet.likes, username];
+        // console.log("LIKED");
+      } else {
+        // remove the username from the liked list if it exists already
+        const index = tweet.likes.indexOf(username);
+        if (index > -1) {
+          tweet.likes.splice(index, 1);
+        }
+        // console.log("UNLIKED");
+      }
       await Tweet.findOneAndUpdate({ _id: tweet_id }, tweet, { new: true });
       return res.status(201).send("Tweet Liked");
     } else {
@@ -108,37 +116,37 @@ module.exports = {
   */
 
   commentTweet: async (req, res) => {
-    // if (verify) {
-    const { username, comment } = req.body;
+    if (verify) {
+      const { username, comment } = req.body;
 
-    if (!comment) return res.status(400).send("Comment cannot be empty");
+      if (!comment) return res.status(400).send("Comment cannot be empty");
 
-    const tweet_id = req.params.tweetId;
-    const tweet = await Tweet.findOne({
-      _id: tweet_id,
-    });
+      const tweet_id = req.params.tweetId;
+      const tweet = await Tweet.findOne({
+        _id: tweet_id,
+      });
 
-    if (!tweet) return res.status(400).send("The tweet does not exist");
+      if (!tweet) return res.status(400).send("The tweet does not exist");
 
-    // save new comment as its own tweet
-    const newComment = await new Tweet({
-      username,
-      text: comment,
-    });
+      // save new comment as its own tweet
+      const newComment = await new Tweet({
+        username,
+        text: comment,
+      });
 
-    // console.log(tweet);
-    newComment.save().catch((err) => res.status(400).send("Error: " + err));
+      // console.log(tweet);
+      newComment.save().catch((err) => res.status(400).send("Error: " + err));
 
-    // then store the tweet under 'comments' in parent tweet
-    const currentComments = tweet.comments;
-    tweet.comments = [...currentComments, newComment];
-    await Tweet.findOneAndUpdate({ _id: tweet_id }, tweet, { new: true }).catch(
-      (err) => res.status(400).send(err)
-    );
-    return res.status(201).json(tweet);
-    /* } else {
-      return res.status(401).send("Access Denied");
-    } */
+      // then store the tweet under 'comments' in parent tweet
+      const currentComments = tweet.comments;
+      tweet.comments = [...currentComments, newComment];
+      await Tweet.findOneAndUpdate({ _id: tweet_id }, tweet, {
+        new: true,
+      }).catch((err) => res.status(400).send(err));
+      return res.status(201).json(tweet);
+    } else {
+      return res.status(401).send("Access Denied: Token missing or invalid");
+    }
   },
 
   /*
@@ -149,34 +157,41 @@ module.exports = {
         have to be notified about retweets of itself.
   */
   reTweet: async (req, res) => {
-    // if (verify)
-    const { username, text } = req.body;
-    const reference = req.params.tweetId;
-    const tweet = await Tweet.findOne({
-      _id: reference,
-    });
-    if (!tweet) return res.status(400).send("The tweet does not exist");
-    const newTweet = new Tweet({
-      username,
-      text,
-      reference,
-    });
+    if (verify) {
+      const { username, text } = req.body;
+      const reference = req.params.tweetId;
+      const tweet = await Tweet.findOne({
+        _id: reference,
+      });
+      if (!tweet) return res.status(400).send("The tweet does not exist");
+      const newTweet = new Tweet({
+        username,
+        text,
+        reference,
+      });
 
-    newTweet
-      .save()
-      .then(() => res.status(201).json(newTweet))
-      .catch((err) => res.status(400).send(err));
+      newTweet
+        .save()
+        .then(() => res.status(201).json(newTweet))
+        .catch((err) => res.status(400).send(err));
+    } else {
+      return res.status(401).send("Access Denied: Token missing or invalid");
+    }
   },
   // DELETE TWEET
 
   deleteTweet: async (req, res) => {
     // check for JWT ownership by <if (verify)>
     // once verified then we can find the tweet via id and delete
-    const tweet_id = req.params.tweetId;
-    const removeTweet = await Tweet.findOneAndDelete({
-      _id: tweet_id,
-    })
-      .then(() => res.status(201).send("Tweet Removed"))
-      .catch((err) => res.status(400).send(err));
+    if (verify) {
+      const tweet_id = req.params.tweetId;
+      const removeTweet = await Tweet.findOneAndDelete({
+        _id: tweet_id,
+      })
+        .then(() => res.status(201).send("Tweet Removed"))
+        .catch((err) => res.status(400).send(err));
+    } else {
+      return res.status(401).send("Access Denied: Token missing or invalid");
+    }
   },
 };
