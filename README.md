@@ -1,4 +1,4 @@
-﻿# leapgrad-assessment
+﻿# twitter-backend-clone
 
 ## To start the server
 
@@ -36,13 +36,8 @@ A retweet is also treated as a new tweet but unlike a comment, it stores the ori
 
 ## For the user login environment design
 
-I've decided to utilize JWT for session control for this assessment, every time a user logs in, a JWT token is returned and the front-end may locally store the
+I've decided to utilize JWT for session control for this project, every time a user logs in, a JWT token is returned and the front-end may locally store the
 token and use it to authorize api calls. The token may expire or be blacklisted
-but to simplify things for the assessment, the tokens in this program do not expire. Therefore, there is no 'log-out' function implemented.
+but to simplify things, the tokens in this program do not expire. Therefore, there is no 'log-out' function implemented.
 
-I am particularly happy with the design of the commenting/retweeting system as I was able to somewhat accurately mimic the functional design of Twitter. However, the login and user maintenance aspect could use more work and I am aiming to improve my knowledge and skills on the topic!
-
-Thank you for your time and consideration, please let me know if there are any issues with running the code. If not, I'd love to hear some feedback that may help me improve on my skills!
-
-Best regards,
-Dustin Ma
+Dustin
